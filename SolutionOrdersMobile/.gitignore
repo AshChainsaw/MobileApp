@@ -51,4 +51,64 @@ CodeCoverage/
 # NUnit
 *.VisualState.xml
 TestResult.xml
-nunit-*.xml.vs/
+nunit-*.xml
+
+# React Native
+node_modules/
+.expo/
+.expo-shared/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+local.properties
+.gradle/
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+
+# iOS
+*.ipa
+*.xcuserstate
+ios/Pods/
+ios/build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcscmblueprint
+
+# Metro bundler
+.metro-health-check*
+/.vs
+/.idea
+*.csproj.user.vs/
+.vs/
