@@ -1,6 +1,6 @@
-using MapsterMapper;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
-using SolutionOrders.API.Features.Items.Messages.DTOs;
+using SolutionOrders.API.Models;
 using SolutionOrders.API.Models.Data;
 
 namespace SolutionOrders.API.Features.Items.Providers
@@ -8,37 +8,57 @@ namespace SolutionOrders.API.Features.Items.Providers
     public class ItemsProvider : IItemsProvider
     {
         private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly TypeAdapterConfig _mapsterConfig;
 
-        public ItemsProvider(ApplicationDbContext context, IMapper mapper)
+        public ItemsProvider(ApplicationDbContext context, TypeAdapterConfig mapsterConfig)
         {
             _context = context;
-            _mapper = mapper;
+            _mapsterConfig = mapsterConfig;
         }
 
-        public async Task<IReadOnlyList<ItemDto>> GetAllActiveAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<Item>> GetAllActiveAsync(bool AsNoTracking = true, CancellationToken cancellationToken = default)
         {
-            var items = await _context.Items
-                .AsNoTracking()
+            var query = _context.Items
+
                 .Include(i => i.Category)
                 .Include(i => i.UnitOfMeasurement)
-                .Where(i => i.IsActive)
-                .OrderBy(i => i.Name)
+                .Where(i => i.IsActive);
+                
+            if(AsNoTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+
+
+
+            return await query
+                .OrderBy(item => item.Name)
                 .ToListAsync(cancellationToken);
 
-            return _mapper.Map<List<ItemDto>>(items);
+            
         }
 
-        public async Task<ItemDto?> GetByIdAsync(int idItem, CancellationToken cancellationToken)
+        public async Task<Item?> GetByIdAsync(int idItem, bool AsNoTracking = true, CancellationToken cancellationToken = default)
         {
-            var item = await _context.Items
-                .AsNoTracking()
-                .Include(i => i.Category)
-                .Include(i => i.UnitOfMeasurement)
+
+            var query = _context.Items
+
+               .Include(i => i.Category)
+               .Include(i => i.UnitOfMeasurement)
+               .Where(i => i.IsActive);
+
+            if (AsNoTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return await query
                 .FirstOrDefaultAsync(i => i.IdItem == idItem, cancellationToken);
 
-            return item is null ? null : _mapper.Map<ItemDto>(item);
+           
         }
+
     }
 }
 

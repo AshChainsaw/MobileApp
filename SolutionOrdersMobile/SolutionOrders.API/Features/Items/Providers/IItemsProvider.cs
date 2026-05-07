@@ -1,11 +1,11 @@
-using SolutionOrders.API.Features.Items.Messages.DTOs;
+using SolutionOrders.API.Models;
 
 namespace SolutionOrders.API.Features.Items.Providers
 {
     public interface IItemsProvider
     {
-        Task<IReadOnlyList<ItemDto>> GetAllActiveAsync(CancellationToken cancellationToken);
-        Task<ItemDto?> GetByIdAsync(int idItem, CancellationToken cancellationToken);
+        Task<IReadOnlyList<Item>> GetAllActiveAsync(bool AsNoTracking = true, CancellationToken cancellationToken = default);
+        Task<Item?> GetByIdAsync(int idItem, bool AsNoTracking = true, CancellationToken cancellationToken = default);
     }
 }
 
