@@ -1,113 +1,130 @@
-
-using Microsoft.EntityFrameworkCore;
 using Mapster;
-using SolutionOrders.API.Models.Data;
-using System.Reflection;
-using SolutionOrders.API.Features.Items.Providers;
-using SolutionOrders.API.Features.Items.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SolutionOrders.API.Features.Items.Providers;
+using SolutionOrders.API.Features.Items.Services;
+using SolutionOrders.API.Models.Data;
+using System.Reflection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+ConfigureServices(builder);
+
+var app = builder.Build();
+
+ConfigureMiddleware(app);
+
+await ApplyMigrationsAsync(app);
+
+app.Run();
 
 
-namespace SolutionOrders.API
+
+static void ConfigureServices(WebApplicationBuilder builder)
 {
-    public class Program
+    var services = builder.Services;
+    var configuration = builder.Configuration;
+
+    services.AddControllers();
+
+    services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+    services.AddMediatR(cfg =>
+        cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+    ConfigureMapster(services);
+
+    services.AddScoped<IItemsProvider, ItemsProvider>();
+    services.AddScoped<IItemService, ItemService>();
+
+    services.AddOpenApi();
+
+    services.AddCors(options =>
     {
-        public static void Main(string[] args)
+        options.AddPolicy("AllowAll", policy =>
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader());
+    });
+}
+
+static void ConfigureMapster(IServiceCollection services)
+{
+    var config = TypeAdapterConfig.GlobalSettings;
+
+    config.Scan(Assembly.GetExecutingAssembly());
+
+    services.AddSingleton(config);
+}
+
+static void ConfigureMiddleware(WebApplication app)
+{
+    app.UseExceptionHandler(exceptionHandlerApp =>
+    {
+        exceptionHandlerApp.Run(async context =>
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-            // Add services to the container.
-
-            builder.Services.AddControllers();
-
-            // DbContext
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            // MediatR
-            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-
-            // Mapster (Entity -> DTO mappings)
-            var mapsterConfig = TypeAdapterConfig.GlobalSettings;
-            mapsterConfig.Scan(Assembly.GetExecutingAssembly());
-            builder.Services.AddSingleton(mapsterConfig);
-
-            // Providers
-            builder.Services.AddScoped<IItemsProvider, ItemsProvider>();
-
-            builder.Services.AddScoped<IItemService, ItemService>();
-
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-
-            var app = builder.Build();
-
-            app.UseExceptionHandler(exceptionHandlerApp =>
+            var statusCode = exception switch
             {
-                exceptionHandlerApp.Run(async context =>
-                {
-                    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-                    if (exception is null)
-                    {
-                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                        return;
-                    }
+                ArgumentException => StatusCodes.Status400BadRequest,
+                _ => StatusCodes.Status500InternalServerError
+            };
 
-                    var statusCode = exception switch
-                    {
-                        ArgumentException => StatusCodes.Status400BadRequest,
-                        _ => StatusCodes.Status500InternalServerError
-                    };
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/problem+json";
 
-                    context.Response.StatusCode = statusCode;
-                    context.Response.ContentType = "application/problem+json";
-
-                    var problem = new ProblemDetails
-                    {
-                        Status = statusCode,
-                        Title = statusCode == StatusCodes.Status400BadRequest ? "Błędne dane wejściowe" : "Błąd serwera",
-                        Detail = exception.Message
-                    };
-
-                    await context.Response.WriteAsJsonAsync(problem);
-                });
-            });
-
-            // Automatyczne zastosowanie migracji przy starcie
-            using (var scope = app.Services.CreateScope())
+            var problem = new ProblemDetails
             {
-                try
-                {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                    dbContext.Database.Migrate();
-                }
-                catch (Exception ex)
-                {
-                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "Błąd podczas migracji bazy danych");
-                }
-            }
+                Status = statusCode,
+                Title = statusCode == StatusCodes.Status400BadRequest
+                    ? "Błędne dane wejściowe"
+                    : "Błąd serwera",
 
+                Detail = exception?.Message
+            };
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/openapi/v1.json", "v1");
-                });
-            }
+            await context.Response.WriteAsJsonAsync(problem);
+        });
+    });
 
-            app.UseHttpsRedirection();
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
 
-            app.UseAuthorization();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/openapi/v1.json", "v1");
+        });
+    }
 
+    app.UseHttpsRedirection();
 
-            app.MapControllers();
+    app.UseCors("AllowAll");
 
-            app.Run();
-        }
+    app.UseAuthorization();
+
+    app.MapControllers();
+}
+
+static async Task ApplyMigrationsAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+
+    try
+    {
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider
+            .GetRequiredService<ILogger<Program>>();
+
+        logger.LogError(ex, "Błąd podczas migracji bazy danych");
     }
 }

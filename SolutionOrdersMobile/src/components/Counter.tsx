@@ -35,14 +35,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   count: {
-    fontSize: 48,
+    fontSize: 70,
     fontWeight: 'bold',
     color: '#007AFF',
     marginBottom: 20,
   },
   buttons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 20,
     justifyContent: 'center',
   },
   button: {

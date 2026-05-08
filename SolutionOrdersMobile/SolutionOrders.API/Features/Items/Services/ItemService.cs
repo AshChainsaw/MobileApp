@@ -1,6 +1,8 @@
 ﻿using Mapster;
+using Microsoft.EntityFrameworkCore;
 using SolutionOrders.API.Models;
 using SolutionOrders.API.Models.Data;
+using SolutionOrders.API.Features.Items.Messages.Commands;
 
 namespace SolutionOrders.API.Features.Items.Services
 {
@@ -8,14 +10,8 @@ namespace SolutionOrders.API.Features.Items.Services
     {
         public async Task CreateItem(Item item, CancellationToken cancellationToken)
         {
-           context.Items.Add(item);
-           await context.SaveChangesAsync(cancellationToken);
-           
-        }
-
-        public Task UpdateItem(Item item, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
+            context.Items.Add(item);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

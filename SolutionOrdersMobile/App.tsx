@@ -1,47 +1,36 @@
 import React from 'react';
-import { View, Text, StyleSheet , ScrollView, StatusBar, useColorScheme} from 'react-native';
-import {   SafeAreaView} from 'react-native-safe-area-context';
-import Greeting from './src/components/Greeting';
-import Counter from './src/components/Counter';
-
+import { View, StatusBar, useColorScheme, StyleSheet } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ItemsProvider } from './src/context/ItemsContext';
+//import RootNavigator from './src/navigation/RootNavigator';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() == 'light';
-  return (
+  const isDarkMode = useColorScheme() === 'dark';
 
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'}/>
-    <ScrollView >
-     
-   
-    
-      <Greeting name=' Kszyniu' age={40} isVip={true}/>
-       
-       <Greeting name=' Kszyniu' age={40} isVip={true}/>
-        <Greeting name=' Kszynium' age={40} isVip={true}/>
-         <Greeting name=' Kszyniu' age={40} isVip={true}/>
-          <Greeting name=' Kszynium' age={40} isVip={true}/>
-          <Greeting name=' Kszyniu' age={40} isVip={true}/>
-          <Greeting name=' Kszynium' age={40} isVip={true}/>
-          <Greeting name=' Kszyniu' age={40} isVip={true}/>
-          <Greeting name=' Kszyniu' age={40} isVip={true}/>
-          <Greeting name=' Kszyniu' age={40} isVip={true}/>
-            <Counter />
-          
-    </ScrollView>
-    </SafeAreaView>
-    
+  return (
+    <SafeAreaProvider>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <ItemsProvider>
+        <AppContent />
+      </ItemsProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+     {/*<RootNavigator /> */}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
-    
-    backgroundColor: 'black',
   },
-
 });
 
 export default App;

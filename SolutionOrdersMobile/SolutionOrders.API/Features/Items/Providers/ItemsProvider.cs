@@ -2,6 +2,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SolutionOrders.API.Models;
 using SolutionOrders.API.Models.Data;
+using System.ComponentModel;
 
 namespace SolutionOrders.API.Features.Items.Providers
 {
@@ -52,9 +53,15 @@ namespace SolutionOrders.API.Features.Items.Providers
             {
                 query = query.AsNoTracking();
             }
-
-            return await query
+            var item = await query
                 .FirstOrDefaultAsync(i => i.IdItem == idItem, cancellationToken);
+
+            if (item ==null)
+            {
+                throw new KeyNotFoundException($"Produkt o ID {idItem} nie istnieje");
+            }
+
+            return item;
 
            
         }

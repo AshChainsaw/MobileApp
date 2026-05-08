@@ -59,5 +59,45 @@ namespace SolutionOrders.API.Controllers
                 new { id = itemId, message = "Produkt został utworzony" }
             );
         }
+
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateItemCommand command)
+        {
+            if (id != command.IdItem)
+            {
+                return BadRequest(new { message = "ID w URL różni się od ID w body" });
+            }
+
+            try
+            {
+                await _mediator.Send(command);
+                return NoContent();  // HTTP 204 - sukces bez body
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var command = new DeleteItemCommand(id);
+
+            try
+            {
+                await _mediator.Send(command);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
