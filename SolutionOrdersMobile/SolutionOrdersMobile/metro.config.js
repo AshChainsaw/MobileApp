@@ -3,6 +3,10 @@ const fs = require('fs');
 const childProcess = require('child_process');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function realpathOrResolve(p) {
   const abs = path.resolve(p);
   try {
@@ -83,6 +87,18 @@ function existingDirs(paths) {
   return out;
 }
 
+const ignoreRegex = new RegExp(
+  [
+    // Android / Gradle build outputs change constantly (Metro watcher ENOENT).
+    `${escapeRegExp(path.sep)}android${escapeRegExp(path.sep)}.*${escapeRegExp(
+      path.sep,
+    )}(build|intermediates|generated|merged_.*|outputs)${escapeRegExp(path.sep)}`,
+    `${escapeRegExp(path.sep)}\\.gradle${escapeRegExp(path.sep)}`,
+    // General build artifacts
+    `${escapeRegExp(path.sep)}build${escapeRegExp(path.sep)}`,
+  ].join('|'),
+);
+
 const config = {
   watchFolders: existingDirs([
     projectRoot,
@@ -94,6 +110,9 @@ const config = {
   ]),
   resolver: {
     ...defaultConfig.resolver,
+    blockList: defaultConfig.resolver.blockList
+      ? [defaultConfig.resolver.blockList, ignoreRegex]
+      : [ignoreRegex],
     unstable_enableSymlinks: true,
     unstable_enablePackageExports: true,
     nodeModulesPaths: existingDirs([

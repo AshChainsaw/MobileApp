@@ -2,11 +2,12 @@ import { Platform } from 'react-native';
 
 const getBaseUrl = (): string => {
   if (__DEV__) {
-    // DOCKER: Użyj lokalnego IP (nie localhost!)
     if (Platform.OS === 'android') {
-      return 'http://192.168.1.100:5000/api';  // TWOJE IP!
+      // Android emulator: host machine
+      return 'http://10.0.2.2:5000/api';
     } else if (Platform.OS === 'ios') {
-      return 'http://192.168.1.100:5000/api';  // TWOJE IP!
+      // iOS simulator: host machine
+      return 'http://localhost:5000/api';
     }
   }
   

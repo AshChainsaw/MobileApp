@@ -100,7 +100,12 @@ static void ConfigureMiddleware(WebApplication app)
         });
     }
 
-    app.UseHttpsRedirection();
+    // In development, HTTPS redirection often breaks mobile/emulator access
+    // (self-signed cert / different host). Keep HTTP for local dev.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     app.UseCors("AllowAll");
 

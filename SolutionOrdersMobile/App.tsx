@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StatusBar, useColorScheme, StyleSheet } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ItemsProvider } from './src/context/ItemsContext';
-//import RootNavigator from './src/navigation/RootNavigator';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,7 +22,7 @@ function AppContent(): React.JSX.Element {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-     {/*<RootNavigator /> */}
+      <RootNavigator />
     </View>
   );
 }

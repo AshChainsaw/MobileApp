@@ -5,6 +5,8 @@ export type RootStackParamList = {
   Items: undefined;
   CreateItem: undefined;
   EditItem: { item: Item };
+  RailTraction: undefined;
+  RailSleepers: undefined;
   Categories: undefined;
   Units: undefined;
   Clients: undefined;
